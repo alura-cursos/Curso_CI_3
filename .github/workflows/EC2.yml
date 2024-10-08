@@ -1,0 +1,39 @@
+name: Entrega Continua
+
+on:
+  workflow_call:
+
+jobs:
+  EC2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v3.0.0
+        with:
+          name: programa
+      - uses: actions/checkout@v3
+      
+      - name: deploy to server
+        uses: saranraj3195/sparkout-deployment@v2
+        env:
+         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+         REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+         REMOTE_USER: ${{ secrets.REMOTE_USER }}
+         TARGET: /home/${{ secrets.REMOTE_USER }}
+         EXCLUDE: "postgres-data"
+
+      - name: executing remote ssh commands using password
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY}}
+          port: 22
+          script: |
+            export HSOT=${{ secrets.DBHOST }}
+            export USER={{ secrets.DBUSER }}
+            export PASSWORD={{ secrets.DBPASSWORD }}
+            export DBNAME={{ secrets.DBNAME }}
+            export DBPORT={{ secrets.DBPORT }}
+            export PORT=8000
+            
